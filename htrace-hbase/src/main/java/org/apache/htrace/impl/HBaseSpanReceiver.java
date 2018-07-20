@@ -63,7 +63,7 @@ public class HBaseSpanReceiver implements SpanReceiver {
   private static final Log LOG = LogFactory.getLog(HBaseSpanReceiver.class);
 
   public static final String COLLECTOR_QUORUM_KEY = "htrace.hbase.collector-quorum";
-  public static final String DEFAULT_COLLECTOR_QUORUM = "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com";
+  public static final String DEFAULT_COLLECTOR_QUORUM = "2.hbase.master.xxxxxxyumingxxxx.com,3.hbase.master.xxxxxxyumingxxxx.com,1.hbase.master.xxxxxxyumingxxxx.com";
   public static final String ZOOKEEPER_CLIENT_PORT_KEY = "htrace.hbase.zookeeper.property.clientPort";
   public static final int DEFAULT_ZOOKEEPER_CLIENT_PORT = 2181;
   public static final String ZOOKEEPER_ZNODE_PARENT_KEY = "htrace.hbase.zookeeper.znode.parent";
@@ -332,7 +332,7 @@ public class HBaseSpanReceiver implements SpanReceiver {
    */
   public static void main(String[] args) throws Exception {
     Configuration conf = HBaseConfiguration.create();
-    conf.set("hbase.zookeeper.quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
+    conf.set("hbase.zookeeper.quorum", "2.hbase.master.xxxxxxyumingxxxx.com,3.hbase.master.xxxxxxyumingxxxx.com,1.hbase.master.xxxxxxyumingxxxx.com");
     conf.set("hbase.zookeeper.property.clientPort", "2181");
     conf.set("zookeeper.znode.parent", "/hbase-standby");
 

@@ -70,7 +70,7 @@ public class HBaseSpanViewerServer implements Tool {
     LOG.info("Starting Web-server for " + NAME + " at: " + uri);
     httpServer = builder.build();
     httpServer.setAttribute(HTRACE_CONF_ATTR, conf);
-    conf.set("hbase.zookeeper.quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
+    conf.set("hbase.zookeeper.quorum", "2.hbase.master.xxxxxxyumingxxxx.com,3.hbase.master.xxxxxxyumingxxxx.com,1.hbase.master.xxxxxxyumingxxxx.com");
     conf.set("hbase.zookeeper.property.clientPort", "2181");
     conf.set("zookeeper.znode.parent", "/hbase-standby");
     httpServer.addServlet("gettraces",
