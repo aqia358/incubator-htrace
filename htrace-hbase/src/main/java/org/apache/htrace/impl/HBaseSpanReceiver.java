@@ -63,13 +63,13 @@ public class HBaseSpanReceiver implements SpanReceiver {
   private static final Log LOG = LogFactory.getLog(HBaseSpanReceiver.class);
 
   public static final String COLLECTOR_QUORUM_KEY = "htrace.hbase.collector-quorum";
-  public static final String DEFAULT_COLLECTOR_QUORUM = "127.0.0.1";
+  public static final String DEFAULT_COLLECTOR_QUORUM = "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com";
   public static final String ZOOKEEPER_CLIENT_PORT_KEY = "htrace.hbase.zookeeper.property.clientPort";
   public static final int DEFAULT_ZOOKEEPER_CLIENT_PORT = 2181;
   public static final String ZOOKEEPER_ZNODE_PARENT_KEY = "htrace.hbase.zookeeper.znode.parent";
-  public static final String DEFAULT_ZOOKEEPER_ZNODE_PARENT = "/hbase";
+  public static final String DEFAULT_ZOOKEEPER_ZNODE_PARENT = "/hbase-standby";
   public static final String NUM_THREADS_KEY = "htrace.hbase.num-threads";
-  public static final int DEFAULT_NUM_THREADS = 1;
+  public static final int DEFAULT_NUM_THREADS = 30;
   public static final String MAX_SPAN_BATCH_SIZE_KEY = "htrace.hbase.batch.size";
   public static final int DEFAULT_MAX_SPAN_BATCH_SIZE = 100;
   public static final String TABLE_KEY = "htrace.hbase.table";
@@ -129,10 +129,10 @@ public class HBaseSpanReceiver implements SpanReceiver {
     this.icf = Bytes.toBytes(conf.get(INDEXFAMILY_KEY, DEFAULT_INDEXFAMILY));
     this.maxSpanBatchSize = conf.getInt(MAX_SPAN_BATCH_SIZE_KEY,
                                         DEFAULT_MAX_SPAN_BATCH_SIZE);
-    String quorum = conf.get(COLLECTOR_QUORUM_KEY, DEFAULT_COLLECTOR_QUORUM);
-    hconf.set(HConstants.ZOOKEEPER_QUORUM, quorum);
-    String znodeParent = conf.get(ZOOKEEPER_ZNODE_PARENT_KEY, DEFAULT_ZOOKEEPER_ZNODE_PARENT);
-    hconf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodeParent);
+//    String quorum = conf.get(COLLECTOR_QUORUM_KEY, DEFAULT_COLLECTOR_QUORUM);
+    hconf.set(HConstants.ZOOKEEPER_QUORUM, DEFAULT_COLLECTOR_QUORUM);
+//    String znodeParent = conf.get(ZOOKEEPER_ZNODE_PARENT_KEY, DEFAULT_ZOOKEEPER_ZNODE_PARENT);
+    hconf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, DEFAULT_ZOOKEEPER_ZNODE_PARENT);
     int clientPort = conf.getInt(ZOOKEEPER_CLIENT_PORT_KEY, DEFAULT_ZOOKEEPER_CLIENT_PORT);
     hconf.setInt(HConstants.ZOOKEEPER_CLIENT_PORT, clientPort);
 
@@ -186,15 +186,15 @@ public class HBaseSpanReceiver implements SpanReceiver {
           // Ignored.
         }
         startClient();
-        if (dequeuedSpans.isEmpty()) {
-          try {
-            this.htable.flushCommits();
-          } catch (IOException e) {
-            LOG.error("failed to flush writes to HBase.");
-            closeClient();
-          }
-          continue;
-        }
+//        if (dequeuedSpans.isEmpty()) {
+//          try {
+//            this.htable.flushCommits();
+//          } catch (IOException e) {
+//            LOG.error("failed to flush writes to HBase.");
+//            closeClient();
+//          }
+//          continue;
+//        }
 
         try {
           for (Span span : dequeuedSpans) {
@@ -213,14 +213,14 @@ public class HBaseSpanReceiver implements SpanReceiver {
                                             .build());
             }
             Put put = new Put(Bytes.toBytes(span.getTraceId()));
-            put.add(HBaseSpanReceiver.this.cf,
+            put.addColumn(HBaseSpanReceiver.this.cf,
                     sbuilder.build().toByteArray(),
                     null);
             if (span.getParentId() == Span.ROOT_SPAN_ID) {
-              put.add(HBaseSpanReceiver.this.icf,
+              put.addColumn(HBaseSpanReceiver.this.icf,
                       INDEX_TIME_QUAL,
                       Bytes.toBytes(span.getStartTimeMillis()));
-              put.add(HBaseSpanReceiver.this.icf,
+              put.addColumn(HBaseSpanReceiver.this.icf,
                       INDEX_SPAN_QUAL,
                       sbuilder.build().toByteArray());
             }
@@ -331,8 +331,13 @@ public class HBaseSpanReceiver implements SpanReceiver {
    * @throws IOException
    */
   public static void main(String[] args) throws Exception {
+    Configuration conf = HBaseConfiguration.create();
+    conf.set("hbase.zookeeper.quorum", "2.hbase.master.bjs-datalake.p1staff.com,3.hbase.master.bjs-datalake.p1staff.com,1.hbase.master.bjs-datalake.p1staff.com");
+    conf.set("hbase.zookeeper.property.clientPort", "2181");
+    conf.set("zookeeper.znode.parent", "/hbase-standby");
+
     SpanReceiverBuilder builder =
-      new SpanReceiverBuilder(new HBaseHTraceConfiguration(HBaseConfiguration.create()));
+      new SpanReceiverBuilder(new HBaseHTraceConfiguration(conf));
     SpanReceiver receiver =
       builder.spanReceiverClass(HBaseSpanReceiver.class.getName()).build();
     Trace.addReceiver(receiver);

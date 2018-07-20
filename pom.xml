@@ -306,13 +306,15 @@ language governing permissions and limitations under the License. -->
     </dependencies>
   </dependencyManagement>
   <distributionManagement>
-    <site>
-      <id>htrace.incubator.apache.org</id>
-      <name>HTrace Website at incubator.apache.org</name>
-      <!-- On why this is the tmp dir and not hbase.apache.org, see
-               https://issues.apache.org/jira/browse/HBASE-7593?focusedCommentId=13555866&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-13555866
-               -->
-      <url>file:///tmp</url>
-    </site>
+    <repository>
+      <id>releases</id>
+      <name>Nexus Release Repository</name>
+      <url>http://localhost:8081/repository/maven-releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>Nexus Snapshot Repository</name>
+      <url>http://localhost:8081/repository/maven-snapshots/</url>
+    </snapshotRepository>
   </distributionManagement>
 </project>
