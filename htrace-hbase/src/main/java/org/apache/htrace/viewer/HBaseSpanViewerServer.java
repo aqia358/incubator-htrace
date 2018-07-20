@@ -30,6 +30,10 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 public class HBaseSpanViewerServer implements Tool {
   private static final Log LOG = LogFactory.getLog(HBaseSpanViewerServer.class);
@@ -42,6 +46,7 @@ public class HBaseSpanViewerServer implements Tool {
   private Configuration conf;
   private HttpServer2 httpServer;
   private InetSocketAddress httpAddress;
+  private Server server;
 
   public void setConf(Configuration conf) {
     this.conf = conf;
@@ -80,7 +85,7 @@ public class HBaseSpanViewerServer implements Tool {
                           .getClassLoader()
                           .getResource("webapps/" + NAME)
                           .toString();
-    httpServer.getWebAppContext().setResourceBase(rb);
+//    httpServer.getWebAppContext().setResourceBase(rb);
 
     httpServer.start();
     httpAddress = httpServer.getConnectorAddress(0);
@@ -103,9 +108,33 @@ public class HBaseSpanViewerServer implements Tool {
   }
 
   public int run(String[] args) throws Exception {
-    start();
-    join();
-    stop();
+//    start();
+//    join();
+//    stop();
+    URI uri = new URI("http://" + conf.get(HTRACE_VIEWER_HTTP_ADDRESS_KEY,
+            HTRACE_VIEWER_HTTP_ADDRESS_DEFAULT));
+    InetSocketAddress addr = new InetSocketAddress(uri.getHost(), uri.getPort());
+    server = new Server(addr);
+    ServletContextHandler root =
+            new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
+    server.setHandler(root);
+
+    String resourceBase = server.getClass()
+            .getClassLoader()
+            .getResource("webapps/htrace")
+            .toExternalForm();
+    root.setResourceBase(resourceBase);
+    root.setWelcomeFiles(new String[]{"index.html"});
+    root.addServlet(new ServletHolder(new DefaultServlet()),
+            "/");
+    root.addServlet(new ServletHolder(new HBaseSpanViewerTracesServlet(conf)),
+            "/gettraces");
+    root.addServlet(new ServletHolder(new HBaseSpanViewerSpansServlet(conf)),
+            "/getspans/*");
+
+    server.start();
+    server.join();
+
     return 0;
   }
 
